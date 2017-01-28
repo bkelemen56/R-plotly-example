@@ -1,0 +1,53 @@
+---
+title: "Example plot with plot.ly"
+author: "Bill Kelemen"
+date: "January 28, 2017"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Description
+
+```{r incudes, echo=FALSE}
+suppressPackageStartupMessages(library(plotly))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(plotly))
+suppressPackageStartupMessages(library(quantmod))
+```
+
+This example will show a very simple stock price chart. 
+
+The package `quantmod` is used to download Apple and Microsoft stock prices.The chart on the following slide displays stock returns for these two companies since 2010.
+
+```{r get_data, echo=FALSE, message=FALSE, warning=FALSE}
+# Get stock data for APPL and MSFT
+invisible(getSymbols(Symbols = c("AAPL", "MSFT"), auto.assign = TRUE))
+
+# utility function to convert xts/zoo data into df
+make_df <- function(symbol, symbol_prices) {
+  ts <- symbol_prices['2010/']
+  df <- data.frame(date = index(ts), symbol = symbol, price = coredata(ts[,6]))
+  names(df) <- c('date', 'symbol', 'price')
+  df$ret <- df$price / df$price[1] - 1
+  df
+}
+
+# normalized price data
+df <- rbind(make_df('AAPL', AAPL), make_df('MSFT', MSFT))
+```
+
+## plot.ly example
+
+```{r stock_plot_ly, message=FALSE, warning=FALSE}
+# plot
+plot_ly(df, x = ~date, y = ~ret, color = ~symbol, type = "scatter", mode = "lines") %>%
+  layout(
+    title = "Stock returns since 2010",
+    xaxis = list(title = "Date"),
+    yaxis = list(title = "Return", tickformat = "%")
+  )
+```
+
